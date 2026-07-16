@@ -1,0 +1,2 @@
+# writer_identification_from_arabic_handwriting
+Multimodal Approach to Writer Identification from Arabic Handwriting
