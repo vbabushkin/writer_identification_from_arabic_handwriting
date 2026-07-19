@@ -5,11 +5,10 @@
 
 Below is  a detailed overview of how kinematic and Electromyography (EMG) data are preprocessed, segmented, and cleaned within the pipeline, based on the implementation details found in `kinematics_preprocess_data.py`, `utilities.py`, and `emg_preprocess_data.py`. 
 The data preprocessing files are stored in `DATA_PREPROCESSING` folder.
----
 
 ### 1.1. Kinematics Preprocessing Steps
 
-To retain the fine-grained, personalized characteristics of handwriting, a minimal preprocessing pipeline is applied to the synchronized stylus and hand-kinematics data:
+To retain the fine-grained, personalized characteristics of handwriting, a minimal preprocessing pipeline is applied to the synchronized stylus and hand-kinematics data.
 
 #### 1. Metadata Exclusion
 * Non-kinematic and administrative data streams are completely excluded from the dataset.
