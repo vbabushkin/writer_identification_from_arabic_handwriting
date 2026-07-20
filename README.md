@@ -94,14 +94,18 @@ The `HYPERPARAMETER_SEARCH` directory contains following files for  identifying 
 
 The complete evaluation ranges and search parameters evaluated across the pipeline scripts are summarized below:
 
-| Optimization Domain |  Scripts                         |  Search Space                                               | Optimization Target                                                  |
-| :--- |:---------------------------------|:------------------------------------------------------------|:---------------------------------------------------------------------|
-| **Stylus Architecture** | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]`     | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
-| **Hand Kinematics Architecture** | `arch_search_hand.py`            | Channels: Up to `1024` <br> Varied Kernel Widths            | Optimal 1D-CNN architecture 110 hand kinematics features.            |
-| **Multimodal Joint Architecture** | `arch_search_hand_and_stylus.py` | Multi-stream balanced layers <br> Full 117 Feature Set      | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
-| **Kinematic Windows** | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand kinematics .                          |
-| **Kinematic Window Overlap** | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                            | Optimal overlap for stylus and hand kinematics.                      |
-| **sEMG Window & Overlap** | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints <br> Variable Overlaps | Optimal window length for EMG signals.                               |
+| Optimization Domain                   | Scripts                          | Search Space                                                | Optimization Target                                                  |
+|:--------------------------------------|:---------------------------------|:------------------------------------------------------------|:---------------------------------------------------------------------|
+| **Stylus Architecture**               | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]`     | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
+| **Hand Kinematics Architecture**      | `arch_search_hand.py`            | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]`     | Optimal 1D-CNN architecture 110 hand kinematics features.            |
+| **Hand and Stylus Architecture**      | `arch_search_hand_and_stylus.py` | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]`     | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
+| **EMG Architecture**                  | `arch_search_emg.py`             | Channels: `[32 to 576]` <br> Kernel Sizes: `[5 to 750]`     | Optimal 1D-CNN architecture surface EMG records for EDC, BB, FDI.    |
+| **Stylus Kinematic Windows**          | `kin_win_search_stylus.py`       | Length: `[128 to 1728]` timepoints                          | Optimal window length for stylus kinematics.                         |
+| **Hand and Stylus Kinematic Windows** | `kin_win_search_hand_stylus.py`  | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand and stylus  kinematics.               |
+| **Hand Kinematic Windows**            | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand kinematics.                           |
+| **sEMG Window & Overlap**             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints                        | Optimal window length for EMG signals.                               |
+| **Kinematic Window Overlap**          | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                            | Optimal overlap for stylus and hand kinematics.                      |
+| **sEMG Window & Overlap**             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints <br> Variable Overlaps | Optimal window length for EMG signals.                               |
 
 
 ### 2.3. Visualization Scripts Overview
