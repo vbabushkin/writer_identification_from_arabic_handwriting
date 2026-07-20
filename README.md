@@ -1,55 +1,57 @@
 # Multimodal Approach to Writer Identification from Arabic Handwriting
 
+This document provides technical details of code used in "Multimodal Approach to Writer Identification from Arabic Handwriting" paper.
+## 1. Data Preprocessing and Cleaning
 
-## 1. Data Preprocessing and Cleaning Pipeline
 
-Below is  a detailed overview of how kinematic and Electromyography (EMG) data are preprocessed, segmented, and cleaned within the pipeline, based on the implementation details found in `kinematics_preprocess_data.py`, `utilities.py`, and `emg_preprocess_data.py`. 
-The data preprocessing files are stored in `DATA_PREPROCESSING` folder.
+The `DATA_PREPROCESSING` folder contains following files for Hand/Stylus Kinematics and Surface Electromyography (sEMG) signals preprocessing:  
+* `kinematics_preprocess_data.py`, 
+* `utilities.py`,
+* `emg_preprocess_data.py`.
+
 ---
 
-### 1.1. Kinematics Preprocessing Steps
+### 1.1. Hand/Stylus Kinematics Preprocessing Steps
 
-To retain the fine-grained, personalized characteristics of handwriting, a minimal preprocessing pipeline is applied to the synchronized stylus and hand-kinematics data:
+To retain the fine-grained, personalized characteristics of handwriting, a minimal preprocessing  is applied to the stylus and hand-kinematics data:
 
 #### 1. Metadata Exclusion
-* Non-kinematic and administrative data streams are completely excluded from the dataset.
-* Specifically, the features `handId`, `sec`, `min`, `hour`, `lifetimeOfThisHandObject`, and `confidence` are dropped from the recording DataFrames to keep only structural movement data.
+* Non-kinematic data and metadata are completely excluded from the dataset to ensure privacy of the subjects.
+* The features `handId`, `sec`, `min`, `hour`, `lifetimeOfThisHandObject`, and `confidence` are dropped from the final DataFrames to keep only structural movement data.
 
 #### 2. Feature Type Casting
-* The remaining functional kinematic features are extracted and converted from structured DataFrames into raw NumPy arrays.
+* The remaining kinematic features are extracted and converted from structured DataFrames into raw NumPy arrays.
 * These arrays are explicitly cast to a 32-bit floating-point precision format (`np.float32`) to achieve optimal computational efficiency during training.
 
 #### 3. Edge Sample Trimming
 * To eliminate initialization noise and artifacts at the boundaries of the text-writing sessions, the beginning and ending periods of each recording are trimmed.
-* The pipeline achieves this by discarding exactly the first two samples and the last two samples of the sequence using array slicing (`tmpX = tmpX[2:-2, :]`).
+* The pipeline achieves this by discarding the first and the last two records of the sequence using array slicing (`tmpX = tmpX[2:-2, :]`).
 
 #### 4. Dynamics Preservation (No Smoothing)
-* Unlike traditional signal processing pipelines that heavily smooth inputs, this implementation strictly avoids applying any median filtering or signal smoothing techniques.
-* By invoking the data loaders with the filter argument set to `False` (`applyFilter = False`), the pipeline bypasses the `median_filter` conditional branch, ensuring that unique, writer-specific dynamic fluctuations are fully preserved.
+* Unlike traditional signal processing pipelines that heavily smooth inputs, this pipeline strictly avoids applying any median filtering or signal smoothing techniques, ensuring that unique, writer-specific dynamic fluctuations are fully preserved.
 
 ---
 ### 1.2. EMG Preprocessing Steps
 
-The preprocessing pipeline converts raw EMG signals into structured, normalized feature arrays ready for machine learning models through the following sequence:
-
+The preprocessing pipeline converts raw EMG signals into structured, normalized feature arrays ready for machine learning models:
+It contains the following steps:
 #### 1. Time-Alignment & Trimming
-* Raw EMG sequences are synchronized with recorded kinematic data.
-* Data points are filtered to fit strictly between the first and last timestamps of the corresponding kinematics recording (`t[0]` and `t[len(t)-1]`), ensures perfect temporal alignment across modalities.
+* Raw EMG sequences are synchronized with recorded kinematic data by aligning the start and stop triggers inserted during the data acquisition stage.
+* Data points are filtered to fit strictly between the first and last timestamps of the corresponding kinematics recording (`t[0]` and `t[len(t)-1]`), to achieve high temporal alignment across modalities.
 
 #### 2. Feature Selection & Type Casting
-* The initial timestamp metadata columns (such as `"Timestamp"`) are dropped to keep only the functional EMG muscle activity channels.
-* Structured DataFrames are converted into NumPy arrays explicitly formatted with 32-bit floating-point precision (`np.float32`) for computational efficiency.
+* The initial timestamp metadata columns  are dropped to keep only the functional EMG muscle activity channels.
+* Structured DataFrames are converted into NumPy arrays and downcasted to 32-bit floating-point precision (`np.float32`) for computational efficiency.
 
-#### 3. Kinematic-Guided Line Segmentation
+#### 3. Kinematic-based Line Segmentation
 * Continuous paragraph-level EMG sequences are sliced into discrete lines.
-* Line boundaries are identified by evaluating structural peaks (`find_peaks`) and computing spatial gradients (`np.gradient`) from the synchronized kinematic text-writing channels.
+* Line boundaries are identified by evaluating structural peaks (`find_peaks`) and computing spatial gradients (`np.gradient`) from the synchronized kinematic data.
 
 #### 4. Downsampling
-* To minimize dimensionality and computational complexity, the raw signals are downsampled from their native acquisition frequency ($Fs = 1260\text{ Hz}$) to a standard target frequency of **128 Hz**.
-* This reduction is handled robustly using the `scipy.signal.resample` method.
+* To minimize dimensionality and computational complexity, the raw signals are downsampled from their native acquisition frequency ($Fs = 1260\text{ Hz}$) to a standard target frequency of **128 Hz** using the `scipy.signal.resample` method.
 
 #### 5. Paragraph Recombination
-* For paragraph-level evaluations (such as generating the `emg_clean50.pickle` dataset), individual segmented lines belonging to the same subject and writing task are vertically restacked into a unified array using `np.vstack`.
+* For paragraph-level evaluations, individual segmented lines belonging to the same subject and writing task are vertically restacked into a unified array using `np.vstack`.
 ---
 ### 1.3. Handling of Missing, Empty, and Short Values
 
@@ -57,11 +59,11 @@ Instead of using statistical imputation methods (e.g., mean substitution or inte
 
 #### 1.3.1. Handling Integrity of  Kinematics Data
 
-| Data Issue | Detection Rule / Threshold | Handling Mechanism |
-| :--- | :--- | :--- |
-| **Startup / Shutdown Tremor & Artifacts** | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`). | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability. |
-| **Non-Kinematic Tracking Overhead** | Extraneous dataset metrics including tracking ID and clock fields (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Blown out of the workspace via `df.drop()`, preventing non-motion variables from interfering with the network weights. |
-| **High-Frequency Measurment Fluctuations** | Signal perturbations across all spatial dimensions evaluated during the loader configuration stage (`applyFilter`). | **Preserved Intact**: Bypasses the `median_filter` routine by hardcoding `applyFilter = False`, preserving the micro-dynamics specific to individual writers. |
+| Data Issue | Detection Rule / Threshold                                                                                                                                | Handling Mechanism                                                                                                                                             |
+| :--- |:----------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Startup / Shutdown Tremor & Artifacts** | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`).                              | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability.               |
+| **Non-Kinematic Tracking Overhead** | Extraneous dataset metrics including tracking ID and clock fields (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Removed from dataframe using `df.drop()`.                                                                                               |
+| **High-Frequency Measurment Fluctuations** | Signal perturbations across all spatial dimensions evaluated at the data loading stage.                                                                   | **Preserved Intact**: Does not use any filtering, such as median filter (`applyFilter = False`), preserving the micro-dynamics specific to individual writers. |
 
 
 #### 1.3.2. Handling Integrity of EMG Data  
