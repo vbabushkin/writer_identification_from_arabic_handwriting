@@ -53,25 +53,24 @@ It contains the following steps:
 #### 5. Paragraph Recombination
 * For paragraph-level evaluations, individual segmented lines belonging to the same subject and writing task are vertically restacked into a unified array using `np.vstack`.
 ---
-### 1.3. Handling of Missing, Empty, and Short Values
+### 1.3. Handling of Missing, Empty, and Short Sequences
 
-Instead of using statistical imputation methods (e.g., mean substitution or interpolation), the pipeline enforces strict data integrity via explicit filtering rules to isolate and drop or trim corrupted, insufficient, or non-kinematic data segments.
-
+Instead of using statistical imputation methods (e.g., mean substitution or interpolation),  invalid or insufficient sequences are removed or trimmed according to explicit rules.
 #### 1.3.1. Handling Integrity of  Kinematics Data
 
-| Data Issue | Detection Rule / Threshold                                                                                                                                | Handling Mechanism                                                                                                                                             |
-| :--- |:----------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Startup / Shutdown Tremor & Artifacts** | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`).                              | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability.               |
-| **Non-Kinematic Tracking Overhead** | Extraneous dataset metrics including tracking ID and clock fields (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Removed from dataframe using `df.drop()`.                                                                                               |
-| **High-Frequency Measurment Fluctuations** | Signal perturbations across all spatial dimensions evaluated at the data loading stage.                                                                   | **Preserved Intact**: Does not use any filtering, such as median filter (`applyFilter = False`), preserving the micro-dynamics specific to individual writers. |
+| Data Issue                      | Detection Rule / Threshold                                                                                                                                | Handling Mechanism                                                                                                                                             |
+|:--------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Boundary Artifacts**          | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`).                              | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability.               |
+| **Non-Kinematic Tracking**      | Extraneous dataset metrics including tracking ID and clock fields (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Removed from dataframe using `df.drop()`.                                                                                               |
+| **High-Frequency Fluctuations** | Signal perturbations across all spatial dimensions evaluated at the data loading stage.                                                                   | **Preserved Intact**: Does not use any filtering, such as median filter (`applyFilter = False`), preserving the micro-dynamics specific to individual writers. |
 
 
 #### 1.3.2. Handling Integrity of EMG Data  
 
-| Data Issue | Detection Rule / Threshold | Handling Mechanism |
-| :--- | :--- | :--- |
-| **Zero-Length Samples** | Identified when a sequence has no records (`len(X[i]) == 0`) during downsampling. | **Skipped entirely**: The sample is completely omitted from the feature matrix, and its corresponding entry is deleted from the metadata list (`mainSubjInfo`). |
-| **Short Artifacts / Commas / Dots** | Sequences containing fewer than 100 frames (`X[k].shape[0] < 100`). | **Flagged & Removed**: Identified as empty frames or brief non-word strokes rather than legibly structured text segments. |
+| Data Issue | Detection Rule / Threshold | Handling Mechanism                                                                                                                                                                                                                                                     |
+| :--- | :--- |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Zero-Length Samples** | Identified when a sequence has no records (`len(X[i]) == 0`) during downsampling. | **Skipped entirely**: The sample is completely omitted, and its corresponding entry is deleted from the metadata list (`mainSubjInfo`).                                                                                                                                |
+| **Short Artifacts / Commas / Dots** | Sequences containing fewer than 100 frames (`X[k].shape[0] < 100`). | **Flagged & Removed**: Identified as empty frames or brief non-word strokes rather than legibly structured text segments.                                                                                                                                              |
 | **Sub-Window Shortfalls** | Any sequence whose total length falls below the mandatory sliding window size (`winSize = 1024`). | **Purged**: The script scans the dataset dimensions, flags indices failing to meet the `winSize` criteria, and removes them from the feature array `X`, labels `Y`, and metadata trackers. Deletions are processed in reverse index order to preserve array stability. |
 
 
@@ -80,43 +79,29 @@ Instead of using statistical imputation methods (e.g., mean substitution or inte
 
 ## 2. Hyperparameter Search and Optimization Pipeline
 
-The `HYPERPARAMETER_SEARCH` directory contains dedicated automation scripts tasked with systematically identifying optimal deep learning architectures and data-splitting configurations. To isolate fine-grained neuromuscular and kinematic behavioral patterns, optimization is executed across three primary dimensions: identifying 1D-CNN architectural constraints (channel capacities and kernel widths), determining the ideal temporal sliding window lengths, and evaluating window overlap configurations.
+The `HYPERPARAMETER_SEARCH` directory contains following files for  identifying optimal deep learning architectures and data-splitting configurations. To isolate fine-grained neuromuscular and kinematic behavioral patterns, optimization is executed across three primary dimensions: identifying 1D-CNN architectural constraints (channel and kernel sizes), determining the ideal temporal sliding window lengths, and finding optimal window overlaps.
 
-### 2.1. Search Space and Script Directory
-
-The hyperparameter optimization framework is partitioned into modular scripts based on data modality and parameter type:
-
-*   **`arch_search_stylus.py`**
-    *   **Purpose:** Fine-tunes the 1D-CNN structural framework exclusively for the stylus tracking data stream.
-    *   **Search Dimensions:** Sweeps through filter channel counts ranging from **8 to 2560** and temporal kernel widths ranging from **3 to 800** to locate the configuration that yields the highest accuracy in writer identification.
-*   **`arch_search_hand.py`**
-    *   **Purpose:** Establishes the ideal 1D-CNN feature extraction foundation for the hand kinematics framework (modeled over 110 unique hand tracking features).
-    *   **Search Dimensions:** Evaluates channel counts scaling up to **1024** along with corresponding variations in 1D convolutional kernel dimensions.
-*   **`arch_search_hand_and_stylus.py`**
-    *   **Purpose:** Manages structural grid sweeps for the comprehensive multimodal joint framework (incorporating all 117 features across both hand and stylus modalities).
-    *   **Search Dimensions:** Identifies the structural balancing thresholds necessary for aligning multi-stream spatial-temporal data streams into a unified layer.
-*   **`kin_win_search_hand.py`**
-    *   **Purpose:** Evaluates the temporal window durations required to capture stable hand kinematic behaviors.
-    *   **Search Dimensions:** Executes grid validation sweeps across window length boundaries scaling from **128 to 1728 timepoints**.
-*   **`kin_ovr_search_hand_stylus.py`**
-    *   **Purpose:** Evaluates optimal step increments during sample extraction to maximize information density.
-    *   **Search Dimensions:** Conducts comprehensive overlap sweeps iterating from **0% to 90%** across kinematics sequences.
-*   **`emg_win_search.py`**
-    *   **Purpose:** Optimizes temporal boundaries for surface electromyography (sEMG) data streams which require independent parsing due to their higher native frequencies.
-    *   **Search Dimensions:** Sweeps massive window span distributions ranging from **100 to 25,000 timepoints** alongside variable overlap ratios to reliably isolate rapid neuromuscular bursts.
+| Script | Purpose                                                                             | Search space                                                           |
+| :--- |:------------------------------------------------------------------------------------|:-----------------------------------------------------------------------|
+| `arch_search_stylus.py` | Finds a suitable 1D-CNN architecture for stylus kinematics.                         | Conv1D channels from 8 to 2560 and kernel sizes from 3 to 800.         |
+| `arch_search_hand.py` | Finds a suitable 1D-CNN architecture for the 110 hand-kinematic features.           | Conv1D channels up to 1024, with several kernel sizes.                 |
+| `arch_search_hand_and_stylus.py` | Searches architectures for the combined 117-feature hand-and-stylus input.          | Channel and kernel configurations for the full multimodal feature set. |
+| `kin_win_search_hand.py` | Finds the optimal window length for hand-kinematics.                                | Window lengths from 128 to 1728 time points.                           |
+| `kin_ovr_search_hand_stylus.py` | Finds  the overlap between consecutive windows containg hand and stylus kinematics. | Overlap values from 0% to 90%.                                         |
+| `emg_win_search.py` | Find optimal window lengths for the sEMG signals.                                   | Window lengths from 100 to 25,000 time points.                         |
 
 ### 2.2. Hyperparameter Grid Space Configurations
 
 The complete evaluation ranges and search parameters evaluated across the pipeline scripts are summarized below:
 
-| Optimization Domain | Targeted Scripts | Sweep Parameters / Search Space | Optimization Target |
-| :--- | :--- | :--- | :--- |
-| **Stylus Architecture** | `arch_search_stylus.py` | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]` | Maximum writer classification accuracy on stylus-only tracks. |
-| **Hand Kinematics Architecture** | `arch_search_hand.py` | Channels: Up to `1024` <br> Varied Kernel Widths | Optimal 1D-CNN feature extraction from 110 hand nodes. |
-| **Multimodal Joint Architecture** | `arch_search_hand_and_stylus.py` | Multi-stream balanced layers <br> Full 117 Feature Set | Balanced spatial-temporal channel integration. |
-| **Kinematic Windows** | `kin_win_search_hand.py` | Length: `[128 to 1728]` timepoints | Minimum length for stable motion pattern recognition. |
-| **Kinematic Window Overlap** | `kin_ovr_search_hand_stylus.py` | Overlap Percentages: `0% to 90%` | Maximum sample extraction density without over-fitting. |
-| **sEMG Window & Overlap** | `emg_win_search.py` | Window: `[100 to 25,000]` timepoints <br> Variable Overlaps | Capturing transient neuromuscular bursts at high frequencies. |
+| Optimization Domain |  Scripts                         |  Search Space                                               | Optimization Target                                                  |
+| :--- |:---------------------------------|:------------------------------------------------------------|:---------------------------------------------------------------------|
+| **Stylus Architecture** | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]`     | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
+| **Hand Kinematics Architecture** | `arch_search_hand.py`            | Channels: Up to `1024` <br> Varied Kernel Widths            | Optimal 1D-CNN architecture 110 hand kinematics features.            |
+| **Multimodal Joint Architecture** | `arch_search_hand_and_stylus.py` | Multi-stream balanced layers <br> Full 117 Feature Set      | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
+| **Kinematic Windows** | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand kinematics .                          |
+| **Kinematic Window Overlap** | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                            | Optimal overlap for stylus and hand kinematics.                      |
+| **sEMG Window & Overlap** | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints <br> Variable Overlaps | Optimal window length for EMG signals.                               |
 
 
 ### 2.3. Visualization Scripts Overview
