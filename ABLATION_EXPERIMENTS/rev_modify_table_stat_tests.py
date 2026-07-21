@@ -6,10 +6,10 @@ import scipy.stats as st
 
 # 1. Define local file names (or absolute paths)
 files = {
-    "Stylus": "/Users/mac/Desktop/AIM_LAB_PAPER/PAST_RESULTS/auth_ch1_2048_k1_100_w_1152_stylus.csv",
-    "Hand": "/Users/mac/Desktop/AIM_LAB_PAPER/PAST_RESULTS/auth_ch1_1024_k1_100_w_1344_hand.csv",
-    "Stylus & Hand": "/Users/mac/Desktop/AIM_LAB_PAPER/PAST_RESULTS/auth_ch1_512_k1_100_w_1024_stylus_hand.csv",
-    "EMG": "/Users/mac/Desktop/AIM_LAB_PAPER/PAST_RESULTS/auth_ch1_576_k1_10_w_1000_emg.csv"
+    "Stylus": "/PAST_RESULTS/auth_ch1_2048_k1_100_w_1152_stylus.csv",
+    "Hand": "/PAST_RESULTS/auth_ch1_1024_k1_100_w_1344_hand.csv",
+    "Stylus & Hand": "/PAST_RESULTS/auth_ch1_512_k1_100_w_1024_stylus_hand.csv",
+    "EMG": "/PAST_RESULTS/auth_ch1_576_k1_10_w_1000_emg.csv"
 }
 
 # 2. Metadata for labels
