@@ -20,20 +20,18 @@ To retain the fine-grained, personalized characteristics of handwriting, a minim
 * The features `handId`, `sec`, `min`, `hour`, `lifetimeOfThisHandObject`, and `confidence` are dropped from the final DataFrames to keep only structural movement data.
 
 #### 2. Feature Type Casting
-* The remaining kinematic features are extracted and converted from structured DataFrames into raw NumPy arrays.
-* These arrays are explicitly cast to a 32-bit floating-point precision format (`np.float32`) to achieve optimal computational efficiency during training.
+* The remaining kinematic features are extracted and converted from structured DataFrames into raw NumPy arrays, cast to a 32-bit floating-point precision format (`np.float32`) to achieve optimal computational efficiency during training.
 
 #### 3. Edge Sample Trimming
-* To eliminate initialization noise and artifacts at the boundaries of the text-writing sessions, the beginning and ending periods of each recording are trimmed.
-* The pipeline achieves this by discarding the first and the last two records of the sequence using array slicing (`tmpX = tmpX[2:-2, :]`).
+* To eliminate initialization noise and artifacts at the boundaries of the text-writing sessions, the start and end of each recording are trimmed by discarding the first and the last two records of the sequence (`tmpX = tmpX[2:-2, :]`).
 
 #### 4. Dynamics Preservation (No Smoothing)
-* Unlike traditional signal processing pipelines that heavily smooth inputs, this pipeline strictly avoids applying any median filtering or signal smoothing techniques, ensuring that unique, writer-specific dynamic fluctuations are fully preserved.
+* Unlike traditional signal processing pipelines that usually smooth input signals, this pipeline strictly avoids applying any median filtering or signal smoothing techniques to ensure that the individual writer-specific fluctuations in hand and stylus dynamics are fully preserved.
 
 ---
 ### 1.2. EMG Preprocessing Steps
 
-The preprocessing pipeline converts raw EMG signals into structured, normalized feature arrays ready for machine learning models:
+The preprocessing pipeline converts raw EMG signals into structured, normalized feature arrays ready for machine learning models.
 It contains the following steps:
 #### 1. Time-Alignment & Trimming
 * Raw EMG sequences are synchronized with recorded kinematic data by aligning the start and stop triggers inserted during the data acquisition stage.
@@ -58,11 +56,11 @@ It contains the following steps:
 Instead of using statistical imputation methods (e.g., mean substitution or interpolation),  invalid or insufficient sequences are removed or trimmed according to explicit rules.
 #### 1.3.1. Handling Integrity of  Kinematics Data
 
-| Data Issue                      | Detection Rule / Threshold                                                                                                                                | Handling Mechanism                                                                                                                                             |
-|:--------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Boundary Artifacts**          | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`).                              | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability.               |
-| **Non-Kinematic Tracking**      | Extraneous dataset metrics including tracking ID and clock fields (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Removed from dataframe using `df.drop()`.                                                                                               |
-| **High-Frequency Fluctuations** | Signal perturbations across all spatial dimensions evaluated at the data loading stage.                                                                   | **Preserved Intact**: Does not use any filtering, such as median filter (`applyFilter = False`), preserving the micro-dynamics specific to individual writers. |
+| Data Issue                      | Detection Rule / Threshold                                                                                                                           | Handling Mechanism                                                                                                                                                   |
+|:--------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Boundary Artifacts**          | The boundary margins of a text-writing sequence block, defined as the first 2 and final 2 sampled indices (`tmpX[2:-2, :]`).                         | **Trimmed & Discarded**: The edge frames are sliced off the array entirely to avoid capturing initialization lags or pen lift/lower instability.                     |
+| **Non-Kinematic Features**      | Non-kinematics features including tracking ID and timestamps (`'handId'`, `'sec'`, `'min'`, `'hour'`, `'lifetimeOfThisHandObject'`, `'confidence'`). | **Filtered & Purged**: Removed from dataframe using `df.drop()`.                                                                                                     |
+| **High-Frequency Fluctuations** | Signal perturbations across all spatial dimensions evaluated at the data loading stage.                                                              | **Preserved Intact**: Does not use any filtering, such as median filter (`applyFilter = False`), preserving the handwriting dynamics specific to individual writers. |
 
 
 #### 1.3.2. Handling Integrity of EMG Data  
