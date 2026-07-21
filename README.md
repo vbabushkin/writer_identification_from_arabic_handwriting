@@ -77,24 +77,13 @@ Instead of using statistical imputation methods (e.g., mean substitution or inte
 
 ## 2. Hyperparameter Search and Optimization Pipeline
 
-The `HYPERPARAMETER_SEARCH` directory contains following files for  identifying optimal deep learning architectures and data-splitting configurations. To isolate fine-grained neuromuscular and kinematic behavioral patterns, optimization is executed across three primary dimensions: identifying 1D-CNN architectural constraints (channel and kernel sizes), determining the ideal temporal sliding window lengths, and finding optimal window overlaps.
+The scripts for identifying optimal deep learning architectures, optimal window sizes and overlaps are stored in `HYPERPARAMETER_SEARCH` directory. To isolate fine-grained neuromuscular and kinematic behavioral patterns, optimization is executed across three primary dimensions: identifying 1D-CNN architectural constraints (channel and kernel sizes), determining the ideal temporal sliding window lengths, and finding optimal window overlaps.
 
-| Script | Purpose                                                                             | Search space                                                           |
-| :--- |:------------------------------------------------------------------------------------|:-----------------------------------------------------------------------|
-| `arch_search_stylus.py` | Finds a suitable 1D-CNN architecture for stylus kinematics.                         | Conv1D channels from 8 to 2560 and kernel sizes from 3 to 800.         |
-| `arch_search_hand.py` | Finds a suitable 1D-CNN architecture for the 110 hand-kinematic features.           | Conv1D channels up to 1024, with several kernel sizes.                 |
-| `arch_search_hand_and_stylus.py` | Searches architectures for the combined 117-feature hand-and-stylus input.          | Channel and kernel configurations for the full multimodal feature set. |
-| `kin_win_search_hand.py` | Finds the optimal window length for hand-kinematics.                                | Window lengths from 128 to 1728 time points.                           |
-| `kin_ovr_search_hand_stylus.py` | Finds  the overlap between consecutive windows containg hand and stylus kinematics. | Overlap values from 0% to 90%.                                         |
-| `emg_win_search.py` | Find optimal window lengths for the sEMG signals.                                   | Window lengths from 100 to 25,000 time points.                         |
-
-### 2.2. Hyperparameter Grid Space Configurations
-
-The complete evaluation ranges and search parameters evaluated across the pipeline scripts are summarized below:
+### 2.1. Hyperparameter Grid Space Configurations
 
 | Optimization Domain                          | Scripts                          | Search Space                                            | Optimization Target                                                  |
 |:---------------------------------------------|:---------------------------------|:--------------------------------------------------------|:---------------------------------------------------------------------|
-| **Stylus Architecture**                      | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]` | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
+| **Stylus Architecture**                      | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]` | Optimal 1D-CNN architecture 110 stylus kinematics features.          |
 | **Hand Kinematics Architecture**             | `arch_search_hand.py`            | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]` | Optimal 1D-CNN architecture 110 hand kinematics features.            |
 | **Hand and Stylus Architecture**             | `arch_search_hand_and_stylus.py` | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]` | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
 | **EMG Architecture**                         | `arch_search_emg.py`             | Channels: `[32 to 576]` <br> Kernel Sizes: `[5 to 750]` | Optimal 1D-CNN architecture surface EMG records for EDC, BB, FDI.    |
@@ -102,13 +91,13 @@ The complete evaluation ranges and search parameters evaluated across the pipeli
 | **Hand and Stylus Kinematic Windows**        | `kin_win_search_hand_stylus.py`  | Length: `[128 to 1728]` timepoints                      | Optimal window length for hand and stylus  kinematics.               |
 | **Hand Kinematic Windows**                   | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                      | Optimal window length for hand kinematics.                           |
 | **sEMG Windows**                             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints                    | Optimal window length for EMG signals.                               |
-| **Stylus Kinematic Window Overlap**          | `kin_ovr_search_stylus.py`       | Overlap Percentages: `0% to 90%`                        | Optimal overlap for stylus  kinematics.                      |
+| **Stylus Kinematic Window Overlap**          | `kin_ovr_search_stylus.py`       | Overlap Percentages: `0% to 90%`                        | Optimal overlap for stylus  kinematics.                              |
 | **Hand and Stylus Kinematic Window Overlap** | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                        | Optimal overlap for stylus and hand kinematics.                      |
-| **Hand Kinematic Window Overlap**            | `kin_ovr_search_hand.py`         | Overlap Percentages: `0% to 90%`                        | Optimal overlap for hand kinematics.                      |
-| **sEMG Overlap**                             | `emg_ovr_search.py`              | Overlap Percentages: `0% to 90%`                        | Optimal overlap for for EMG signals.                               |
+| **Hand Kinematic Window Overlap**            | `kin_ovr_search_hand.py`         | Overlap Percentages: `0% to 90%`                        | Optimal overlap for hand kinematics.                                 |
+| **sEMG Overlap**                             | `emg_ovr_search.py`              | Overlap Percentages: `0% to 90%`                        | Optimal overlap for for EMG signals.                                 |
 
 
-### 2.3. Visualization Scripts Overview
+### 2.2. Visualization Scripts Overview
 
 Below is the summary of the dedicated post-processing and plotting scripts used to visualize the hyperparameter search performance metrics.
 
@@ -156,7 +145,7 @@ The model architecture utilizes a 1D Temporal Convolutional Network (TCN) block 
 
 ---
 
-### 3.4. Outputs and Directory Structure
+### 3.3. Outputs and Directory Structure
 The evaluation script is stored in `PERFORMANCE_EVALUATION` folder and saves configuration-specific metrics automatically into the assigned results paths (`/CODE/AUTH_.../`):
 * `*_model_fold_X.h5`: Trained Keras model weights per fold.
 * `*.csv`: Comprehensive evaluation matrix logging runtimes and global metrics.
@@ -165,7 +154,7 @@ The evaluation script is stored in `PERFORMANCE_EVALUATION` folder and saves con
 
 ## 4. Model Interpretability (Shapley Values)
 
-To demystify the black-box nature of the 1D Temporal Convolutional Networks, feature contributions are interpreted globally and locally using **SHAP (SHapley Additive exPlanations)** via the `DeepExplainer` framework. This evaluates how individual features influence the writer identification decisions.
+To understand which features are important for models to identify writers, feature contributions are interpreted globally and locally using **SHAP (SHapley Additive exPlanations)** via the `DeepExplainer` framework. This evaluates how individual features influence the writer identification decisions.
 
 ### 4.1. Implementation Workflow
 
@@ -228,11 +217,11 @@ The system compares baseline models directly in three experimental designs:
 * **Large Performance Reductions:** Indicate that the removed structural or positioning group contributes to writer identification, revealing that a model takes spatial or anatomical shortcuts.
 * **Preserved Performance:** Demonstrates that the model utilizes  purely dynamic behavioral signals  for writer identification.
 
-### 6.3. Cross-Modality Ablation Mapping
+### 6.3. Ablation and Normalization Scripts 
 
-These tests are executed across three  kinematics modalities (**Hand Kinematics**, **Stylus Kinematics**, and **Stylus and Hand Kinematics**):
+The table below contains scripts for ablation/normalization experiments for Hand Kinematics, Stylus Kinematics, and Stylus and Hand Kinematics modalities:
 
-| Target Modality  | Ablation / Normalization             | File Name                          |
+|  Modality  | Ablation / Normalization             | File Name                          |
 | :--- |:-------------------------------------|:-----------------------------------|
 | **Hand-Only Kinematics** | Static Features Removal (Partial)    | hand_ablation_static.py            |
 | | Static Features Removal (All)        | hand_ablation_static_all.py        |
