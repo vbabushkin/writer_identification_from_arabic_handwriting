@@ -195,7 +195,7 @@ To demystify the black-box nature of the 1D Temporal Convolutional Networks, fea
 The explainability code is stored in 'EXPLAINABILITY' folder. All interpretability data are saved directly into corresponding modality destination folders (`/CODE/AUTH_[MODALITY]/`):
 * `all_shap_values_*.pickle`: Complete serialized data dumps tracking expected values, target arrays, and raw SHAP values.
 * `importance_df_*.csv`: Aggregated global feature weight score arrays, sorted uniformly by cumulative mean absolute impact.
-* `shap_summary_plot_*.pdf`: Scaled visual vector graphs displaying global features impact profiles (both per-fold isolates and consolidated multi-fold averages).
+* `shap_summary_plot_*.pdf`: Plots of global features impact profiles (both per-fold isolates and consolidated multi-fold averages).
 
 ## 5. Search for Optimal Number of Paragraphs for  Training  
 
@@ -204,50 +204,49 @@ The goal is to determine the optimal number of paragraphs  required to successfu
 ### 5.1. Optimization Protocol
 * **Volume Range Verification:** The code evaluates model classification accuracy changes with the step-wise increments of the number of paragraphs in training set ranging from 1 to 5 paragraphs per subject.
 * **Combinatorial Paragraph Partitioning:** For each target paragraphs number, the pipeline uses the `combinations` utility to sample combinations from a subject's available paragraphs. Five combinations are randomly drawn to assemble strict cross-validation folds, guaranteeing that lines belonging to the same text paragraph do not span across train and test sets simultaneously.
-* **Modality Profile Isolation:** Training volume loops verify performance drops and scaling consistency across all individual feature configurations:
+* **Modality Profile Isolation:** The following modalities were analyzed:
   * **Stylus Only Kinematics:** Evaluated with 7 stylus kinematics features.
   * **Hand Only Kinematics:** Evaluated with 110 hand kinematics features.
   * **Combined Hand & Stylus Kinematics:** Evaluated over the full set of 117 stylus and hand kinematics features. 
 * **Balanced Testing Control:** To prevent evaluation bias caused by structural drops in baseline content, the pipeline dynamically detects missing validation subjects across the sparse combinations and injects single samples balanced with `RandomOverSampler`.
 
 ### 5.2. Outputs & Directory Structure
-Execution logs and visualization scripts output empirical performance data directly into respective subdirectory locations:
-* `/CODE/STYLUS_NUM_TRAIN/`, `/CODE/AUTH_HAND_NUM_TRAIN/`, and `/CODE/HAND_STYLUS_NUM_TRAIN/`: Location of serialized fold models (`*.h5`), split definitions (`_folds.pickle`), and performance verification matrix indices (`*.csv`) mapped per paragraph configuration.
-* `centered_boxplot_with_legend.pdf`: An aggregated, publication-grade grouped boxplot figure tracking accuracy metrics (scaled inside a 20% to 100% window) overlaid with trend lines tracking mean changes as a function of the paragraph training volumes.
+Execution logs and visualization scripts save the results  to the  following directories :
+* `/CODE/STYLUS_NUM_TRAIN/`, `/CODE/AUTH_HAND_NUM_TRAIN/`, and `/CODE/HAND_STYLUS_NUM_TRAIN/`: contain serialized fold models (`*.h5`), split definitions (`_folds.pickle`), and model performance evaluations (`*.csv`)  for each number of paragraphs.
+* `centered_boxplot_with_legend.pdf`: An aggregated grouped boxplot figure showing accuracy metrics  with the trend lines  as a function of the model performance with the number of  paragraphs in the  training set.
 
 ## 6. Ablation & Normalization Experiments
 
-The execution scripts inside the `ABLATION_EXPERIMENTS/` workspace directory isolate and evaluate the underlying behavioral drivers of the participant-identification framework.
-
+The scripts are stored in  the `ABLATION_EXPERIMENTS/` 
 ### 6.1. Objectives & Rationale
-These experiments assess whether the framework's identification accuracy is driven primarily by nuanced, dynamic behavioral characteristics (**handwriting dynamics**) or if it relies on static, participant-specific cues that provide an easier shortcut to identity matching. Specifically, the network is evaluated against the targeted removal of stable physical body morphologies (e.g., hand width, arm length, arm width) and absolute spatial positioning coordinates within the recording arena. 
+These experiments evaluate  whether the models' identification accuracy is driven primarily by  handwriting dynamics behavioral characteristics or if it relies on static, participant-specific features that provide an easier shortcut to identity matching. Specifically, the models are evaluated against the targeted removal of stable physical body morphologies (e.g., hand width, arm length, arm width) and absolute spatial positioning coordinates. 
 
-The system compares baseline models directly against three explicit experimental strategies:
-* **Excluding Explicit Morphology:** Strips permanent anatomical measurements from the feature sets to prevent identification based purely on skeletal dimensions.
-* **Coordinate Normalization:** Transforms coordinate spatial channels into local reference metrics (wrist-, palm-, or tablet-normalized frameworks) to eliminate absolute location bias.
-* **Excluding Raw Coordinate Channels:** Completely removes raw positioning coordinates to evaluate if high-order kinematic derivatives are sufficient on their own.
+The system compares baseline models directly in three experimental designs:
+* **Excluding Hand Morphology:** Ablates  anatomical features from the feature sets to prevent identification based purely on physical hand morphologys.
+* **Coordinate Normalization:** Transforms spatial coordinates  into local referenced coordinates  (wrist-, palm-, or tablet-centered) to eliminate absolute location bias.
+* **Excluding Raw Coordinate Channels:** Completely removes raw spatial positioning coordinates to evaluate if high-order kinematic derivatives are sufficient on their own.
 
 ### 6.2. Performance Interpretation
-* **Large Performance Reductions:** Indicate that the removed structural or positioning group contributes heavily to identification, revealing a reliance on spatial or anatomical shortcuts.
-* **Preserved Performance:** Demonstrates that the remaining purely dynamic behavioral signals are robust, secure, and sufficient for identification.
+* **Large Performance Reductions:** Indicate that the removed structural or positioning group contributes to writer identification, revealing that a model takes spatial or anatomical shortcuts.
+* **Preserved Performance:** Demonstrates that the model utilizes  purely dynamic behavioral signals  for writer identification.
 
 ### 6.3. Cross-Modality Ablation Mapping
 
-These tests are executed across three standalone input configurations (**Hand Kinematics**, **Stylus Kinematics**, and **Stylus and Hand Kinematics**) to uncover whether reliance on structural or recording-specific artifacts diverges across sensing modalities.
+These tests are executed across three  kinematics modalities (**Hand Kinematics**, **Stylus Kinematics**, and **Stylus and Hand Kinematics**):
 
-| Target Modality Configuration | Ablation / Normalization             | Script File Path |
-| :--- |:-------------------------------------| :--- |
-| **Hand-Only Kinematics** | Static Features Removal (Partial)    | hand_ablation_static.py` |
-| | Static Features Removal (All)        | hand_ablation_static_all.py` |
-| | Palm-Normalized Spatial Coordinates  | hand_ablation_norm_palm.py` |
-| | Wrist-Normalized Spatial Coordinates | hand_ablation_norm_wrist.py` |
-| **Stylus-Only Kinematics** | Static Features Removal (Partial)    | stylus_ablation_static.py` |
-| | Static Features Removal (All)        | stylus_ablation_static_all.py` |
-| | Static Feature Normalized Tablet     | stylus_ablation_norm_static.py` |
-| **Combined Hand & Stylus** | Static Features Removal (Partial)    | hand_stylus_ablation_static.py` |
-| | Static Features Removal (All)        | hand_stylus_ablation_static_all.py` |
-| | Palm-Normalized Spatial Coordinates  | hand_stylus_ablation_norm_palm.py` |
-| | Wrist-Normalized Spatial Coordinates | hand_stylus_ablation_norm_wrist.py` |
+| Target Modality  | Ablation / Normalization             | File Name                          |
+| :--- |:-------------------------------------|:-----------------------------------|
+| **Hand-Only Kinematics** | Static Features Removal (Partial)    | hand_ablation_static.py            |
+| | Static Features Removal (All)        | hand_ablation_static_all.py        |
+| | Palm-Normalized Spatial Coordinates  | hand_ablation_norm_palm.py         |
+| | Wrist-Normalized Spatial Coordinates | hand_ablation_norm_wrist.py        |
+| **Stylus-Only Kinematics** | Static Features Removal (Partial)    | stylus_ablation_static.py          |
+| | Static Features Removal (All)        | stylus_ablation_static_all.py      |
+| | Static Feature Normalized Tablet     | stylus_ablation_norm_static.py     |
+| **Combined Hand & Stylus** | Static Features Removal (Partial)    | hand_stylus_ablation_static.py     |
+| | Static Features Removal (All)        | hand_stylus_ablation_static_all.py |
+| | Palm-Normalized Spatial Coordinates  | hand_stylus_ablation_norm_palm.py  |
+| | Wrist-Normalized Spatial Coordinates | hand_stylus_ablation_norm_wrist.py |
 
 > **Note on Validation Consistency:** 
-> Every script within the ablation suite enforces the baseline protocol's strict cross-validation boundaries, isolating paragraph-level segments to maintain parity and ensure performance variations are directly comparable.
+> Every script for ablation experiments follows the baseline protocol's strict cross-validation boundaries, isolating paragraph-level segments to maintain parity and ensure performance variations are directly comparable.
