@@ -1,11 +1,9 @@
-import csv
+import datetime
 import glob
-import json
-import os
 import pickle
 import warnings
 from sys import platform
-import datetime
+
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -18,7 +16,6 @@ from scipy.ndimage import median_filter
 from scipy.signal import find_peaks
 from sklearn.metrics import confusion_matrix
 
-import kinematic_features_names
 import path_variables
 
 warnings.filterwarnings('ignore')
