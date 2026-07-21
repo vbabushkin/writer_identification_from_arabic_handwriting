@@ -94,30 +94,32 @@ The `HYPERPARAMETER_SEARCH` directory contains following files for  identifying 
 
 The complete evaluation ranges and search parameters evaluated across the pipeline scripts are summarized below:
 
-| Optimization Domain                   | Scripts                          | Search Space                                                | Optimization Target                                                  |
-|:--------------------------------------|:---------------------------------|:------------------------------------------------------------|:---------------------------------------------------------------------|
-| **Stylus Architecture**               | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]`     | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
-| **Hand Kinematics Architecture**      | `arch_search_hand.py`            | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]`     | Optimal 1D-CNN architecture 110 hand kinematics features.            |
-| **Hand and Stylus Architecture**      | `arch_search_hand_and_stylus.py` | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]`     | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
-| **EMG Architecture**                  | `arch_search_emg.py`             | Channels: `[32 to 576]` <br> Kernel Sizes: `[5 to 750]`     | Optimal 1D-CNN architecture surface EMG records for EDC, BB, FDI.    |
-| **Stylus Kinematic Windows**          | `kin_win_search_stylus.py`       | Length: `[128 to 1728]` timepoints                          | Optimal window length for stylus kinematics.                         |
-| **Hand and Stylus Kinematic Windows** | `kin_win_search_hand_stylus.py`  | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand and stylus  kinematics.               |
-| **Hand Kinematic Windows**            | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                          | Optimal window length for hand kinematics.                           |
-| **sEMG Window & Overlap**             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints                        | Optimal window length for EMG signals.                               |
-| **Kinematic Window Overlap**          | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                            | Optimal overlap for stylus and hand kinematics.                      |
-| **sEMG Window & Overlap**             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints <br> Variable Overlaps | Optimal window length for EMG signals.                               |
+| Optimization Domain                          | Scripts                          | Search Space                                            | Optimization Target                                                  |
+|:---------------------------------------------|:---------------------------------|:--------------------------------------------------------|:---------------------------------------------------------------------|
+| **Stylus Architecture**                      | `arch_search_stylus.py`          | Channels: `[8 to 2560]` <br> Kernel Sizes: `[3 to 800]` | MOptimal 1D-CNN architecture 110 stylus kinematics features.         |
+| **Hand Kinematics Architecture**             | `arch_search_hand.py`            | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]` | Optimal 1D-CNN architecture 110 hand kinematics features.            |
+| **Hand and Stylus Architecture**             | `arch_search_hand_and_stylus.py` | Channels: `[8 to 1024]` <br> Kernel Sizes: `[3 to 800]` | Optimal 1D-CNN architecture 117 hand and stylus kinematics features. |
+| **EMG Architecture**                         | `arch_search_emg.py`             | Channels: `[32 to 576]` <br> Kernel Sizes: `[5 to 750]` | Optimal 1D-CNN architecture surface EMG records for EDC, BB, FDI.    |
+| **Stylus Kinematic Windows**                 | `kin_win_search_stylus.py`       | Length: `[128 to 1728]` timepoints                      | Optimal window length for stylus kinematics.                         |
+| **Hand and Stylus Kinematic Windows**        | `kin_win_search_hand_stylus.py`  | Length: `[128 to 1728]` timepoints                      | Optimal window length for hand and stylus  kinematics.               |
+| **Hand Kinematic Windows**                   | `kin_win_search_hand.py`         | Length: `[128 to 1728]` timepoints                      | Optimal window length for hand kinematics.                           |
+| **sEMG Windows**                             | `emg_win_search.py`              | Window: `[100 to 25,000]` timepoints                    | Optimal window length for EMG signals.                               |
+| **Stylus Kinematic Window Overlap**          | `kin_ovr_search_stylus.py`       | Overlap Percentages: `0% to 90%`                        | Optimal overlap for stylus  kinematics.                      |
+| **Hand and Stylus Kinematic Window Overlap** | `kin_ovr_search_hand_stylus.py`  | Overlap Percentages: `0% to 90%`                        | Optimal overlap for stylus and hand kinematics.                      |
+| **Hand Kinematic Window Overlap**            | `kin_ovr_search_hand.py`         | Overlap Percentages: `0% to 90%`                        | Optimal overlap for hand kinematics.                      |
+| **sEMG Overlap**                             | `emg_ovr_search.py`              | Overlap Percentages: `0% to 90%`                        | Optimal overlap for for EMG signals.                               |
 
 
 ### 2.3. Visualization Scripts Overview
 
 Below is the summary of the dedicated post-processing and plotting scripts used to visualize the hyperparameter search performance metrics.
 
-| File Name | Graph Type        | Purpose |
-| :--- |:------------------| :--- |
-| `analyze_parameter_search_best_ovr.py` | Multi -Line Plot  | Evaluates and plots multi-run accuracy trends against changing temporal window overlap percentages (0% to 90%). |
-| `analyze_parameter_search_best_window.py` | Single Line Curve | Visualizes model identification performance across a progressive sliding window size spectrum. |
-| `emg_analyze_param_search_architecture.py` | Matrix Heatmap    | Generates matrix intensity charts profiling cross-combinations of 1D-CNN layer channels and kernel sizes optimized for surface electromyography (sEMG) signals. |
-| `kin_analyze_parameter_search_architecture.py` | Matrix Heatmap    | Visualizes multi-dimensional parameter search layouts (channels vs. kernels) for positional tracking features (Stylus/Hand kinematics configurations). |
+| File Name | Graph Type        | Purpose                                                                                                              |
+| :--- |:------------------|:---------------------------------------------------------------------------------------------------------------------|
+| `analyze_parameter_search_best_ovr.py` | Multi -Line Plot  | Visualizes model accuracy trends across  different sliding window overlap percentages (0% to 90%).                   |
+| `analyze_parameter_search_best_window.py` | Single Line Curve | Visualizes model  accuracy across different sliding window sizes.                                                    |
+| `emg_analyze_param_search_architecture.py` | Matrix Heatmap    | Generates heatmap of 1D-CNN layer channels and kernel sizes optimized for surface electromyography (sEMG) signals.   |
+| `kin_analyze_parameter_search_architecture.py` | Matrix Heatmap    | Generates heatmap of 1D-CNN layer channels and kernel sizes for Stylus/Hand and combined Stylus and Hand kinematics. |
 
 
 ## 3. Performance Evaluation
