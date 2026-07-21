@@ -167,24 +167,24 @@ The evaluation script is stored in `PERFORMANCE_EVALUATION` folder and saves con
 
 ## 4. Model Interpretability (Shapley Values)
 
-To demystify the black-box nature of the 1D Temporal Convolutional Networks, feature contributions are interpreted globally and locally using **SHAP (SHapley Additive exPlanations)** via the `DeepExplainer` framework. This evaluates how individual physical feature groups influence the multi-class biometric authentication decisions.
+To demystify the black-box nature of the 1D Temporal Convolutional Networks, feature contributions are interpreted globally and locally using **SHAP (SHapley Additive exPlanations)** via the `DeepExplainer` framework. This evaluates how individual features influence the writer identification decisions.
 
 ### 4.1. Implementation Workflow
 
-1. **Expectation Baselines:** A representative background data allocation is sampled uniformly from the isolated training sets ($n = 200$ for EMG; $n = 1000$ for Kinematic streams) to compute base value expectations.
-2. **True Class Isolation:** Because authentication involves a 50-class setup, the high-dimensional SHAP arrays are transformed and isolated (`np.transpose`) to extract feature importances matching only the targeted **true label class** for realistic evaluation.
-3. **Cross-Validation Integration:** SHAP values are extracted independently across all **5 validation folds** to maintain strict out-of-fold testing integrity and to prevent structural data leaks.
+1. A representative background data allocation is sampled uniformly from the  training sets ($n = 200$ for EMG; $n = 1000$ for Kinematic features).
+2. Because writer identification uses 50-classes, the high-dimensional SHAP arrays are transformed and isolated to extract feature importances matching only the targeted true label class.
+3. SHAP values are extracted independently across all 5 validation folds to maintain strict out-of-fold testing integrity and to prevent structural data leaks.
 
 ---
 
 ### 4.2. Execution Parameters & Targets
 
-| Modality Config | Analyzed Features                 | Reference Sample Size ($n$) | Primary Visual Export              |
-| :--- |:----------------------------------| :--- |:-----------------------------------|
-| **EMG Signals** | 3 Channels (`FDI`, `EDC`, `BB`)   | 200 | Full Feature Contribution Bar Plot |
-| **HAND Kinematics** | 110 Hand Kinematics Features      | 1000 | Top 20 & Global Feature Metrics    |
-| **STYLUS Kinematics** | 7 Stylus Kinematics Features      | 1000 | Top 20 & Global Feature Metrics    |
-| **COMBINED (Hand/Stylus)** | 117 Stylus and Hand Kinematics Features | 1000 | Top 20 & Global Feature Metrics                                   |
+| Modality  | Analyzed Features                 | Reference Sample Size ($n$) | Primary Visual Export                 |
+| :--- |:----------------------------------| :--- |:--------------------------------------|
+| **EMG Signals** | 3 Channels (`FDI`, `EDC`, `BB`)   | 200 | Full Feature Contribution Bar Plot    |
+| **HAND Kinematics** | 110 Hand Kinematics Features      | 1000 | Top 20 Features Contribution Bar Plot |
+| **STYLUS Kinematics** | 7 Stylus Kinematics Features      | 1000 | Top 20 Features Contribution Bar Plot |
+| **COMBINED (Hand/Stylus)** | 117 Stylus and Hand Kinematics Features | 1000 | Top 20 Features Contribution Bar Plot |
 
 > 💡 **HPC Cluster Deployment Note:** 
 > When executing the deep graph evaluation over specialized GPU nodes, an internal handler override for TensorFlow operation graphs is executed inside the script (`AddV2` mapped to `passthrough`). This prevents operational compilation blocks within the `DeepExplainer` module.
@@ -192,23 +192,23 @@ To demystify the black-box nature of the 1D Temporal Convolutional Networks, fea
 ---
 
 ### 4.3. Outputs and Directory Structure
-The explainability code is stored in 'EXPLAINABILITY' folder. All interpretability data maps directly into respective modality destination roots (`/CODE/AUTH_[MODALITY]/`):
-* `all_shap_values_*.pickle`: Complete serialized data dumps tracking expected values, target arrays, and raw SHAP multi-dimensional weights.
+The explainability code is stored in 'EXPLAINABILITY' folder. All interpretability data are saved directly into corresponding modality destination folders (`/CODE/AUTH_[MODALITY]/`):
+* `all_shap_values_*.pickle`: Complete serialized data dumps tracking expected values, target arrays, and raw SHAP values.
 * `importance_df_*.csv`: Aggregated global feature weight score arrays, sorted uniformly by cumulative mean absolute impact.
-* `shap_summary_plot_*.pdf`: Scaled visual vector graphs displaying global impact profiles (both per-fold isolates and consolidated multi-fold averages).
+* `shap_summary_plot_*.pdf`: Scaled visual vector graphs displaying global features impact profiles (both per-fold isolates and consolidated multi-fold averages).
 
-## 5. Training Size Optimization 
+## 5. Search for Optimal Number of Paragraphs for  Training  
 
-To determine the optimal number of paragraphs  required to successfully train the models, a search of optimal training set size (in paragraphs) is performed across the kinematics data. The scripts are stored within the `OPTIMAL_NUMBER_OF_PARAGRAPHS_SEARCH` workspace folder.
+The goal is to determine the optimal number of paragraphs  required to successfully train the models using the kinematics data. The scripts are stored within the `OPTIMAL_NUMBER_OF_PARAGRAPHS_SEARCH` workspace folder.
 
 ### 5.1. Optimization Protocol
-* **Volume Range Verification:** The code evaluates model classification accuracy variations by step-wise increments of the number of paragraphs in training set ranging from 1 to 5 paragraphs per subject.
-* **Combinatorial Paragraph Partitioning:** For each target paragraph volume constraint, the pipeline uses the `combinations` utility to sample combinations from a subject's available paragraphs. Five combinations are randomly drawn to assemble strict cross-validation folds, guaranteeing that lines belonging to the same text paragraph do not span across train and test sets simultaneously[cite: 29].
+* **Volume Range Verification:** The code evaluates model classification accuracy changes with the step-wise increments of the number of paragraphs in training set ranging from 1 to 5 paragraphs per subject.
+* **Combinatorial Paragraph Partitioning:** For each target paragraphs number, the pipeline uses the `combinations` utility to sample combinations from a subject's available paragraphs. Five combinations are randomly drawn to assemble strict cross-validation folds, guaranteeing that lines belonging to the same text paragraph do not span across train and test sets simultaneously.
 * **Modality Profile Isolation:** Training volume loops verify performance drops and scaling consistency across all individual feature configurations:
-  * **Stylus Only Kinematics:** Evaluated with isolated features `[:, :, :7]` using 2048 Conv1D channels and a window length of 1152.
-  * **Hand Only Kinematics:** Evaluated with isolated features `[:, :, 7:]` using 1024 Conv1D channels and a window length of 1344.
-  * **Combined Hand & Stylus Kinematics:** Evaluated over the full feature block using 512 Conv1D channels and a window length of 1024.
-* **Balanced Testing Control:** To prevent evaluation bias caused by structural drops in baseline content, the pipeline dynamically detects missing validation subjects across the sparse combinations and injects single samples balanced via `RandomOverSampler`.
+  * **Stylus Only Kinematics:** Evaluated with 7 stylus kinematics features.
+  * **Hand Only Kinematics:** Evaluated with 110 hand kinematics features.
+  * **Combined Hand & Stylus Kinematics:** Evaluated over the full set of 117 stylus and hand kinematics features. 
+* **Balanced Testing Control:** To prevent evaluation bias caused by structural drops in baseline content, the pipeline dynamically detects missing validation subjects across the sparse combinations and injects single samples balanced with `RandomOverSampler`.
 
 ### 5.2. Outputs & Directory Structure
 Execution logs and visualization scripts output empirical performance data directly into respective subdirectory locations:
