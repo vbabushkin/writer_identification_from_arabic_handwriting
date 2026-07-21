@@ -33,11 +33,11 @@ To retain the fine-grained, personalized characteristics of handwriting, a minim
 
 The preprocessing pipeline converts raw EMG signals into structured, normalized feature arrays ready for machine learning models.
 It contains the following steps:
-#### 1. Time-Alignment & Trimming
+#### 1. Time-Alignment and Trimming
 * Raw EMG sequences are synchronized with recorded kinematic data by aligning the start and stop triggers inserted during the data acquisition stage.
 * Data points are filtered to fit strictly between the first and last timestamps of the corresponding kinematics recording (`t[0]` and `t[len(t)-1]`), to achieve high temporal alignment across modalities.
 
-#### 2. Feature Selection & Type Casting
+#### 2. Feature Selection and Type Casting
 * The initial timestamp metadata columns  are dropped to keep only the functional EMG muscle activity channels.
 * Structured DataFrames are converted into NumPy arrays and downcasted to 32-bit floating-point precision (`np.float32`) for computational efficiency.
 
@@ -156,7 +156,7 @@ The evaluation script is stored in `PERFORMANCE_EVALUATION` folder and saves con
 
 To understand which features are important for models to identify writers, feature contributions are interpreted globally and locally using **SHAP (SHapley Additive exPlanations)** via the `DeepExplainer` framework. This evaluates how individual features influence the writer identification decisions.
 
-### 4.1. Implementation Workflow
+### 4.1. Evaluation Protocol 
 
 1. A representative background data allocation is sampled uniformly from the  training sets ($n = 200$ for EMG; $n = 1000$ for Kinematic features).
 2. Because writer identification uses 50-classes, the high-dimensional SHAP arrays are transformed and isolated to extract feature importances matching only the targeted true label class.
@@ -164,7 +164,7 @@ To understand which features are important for models to identify writers, featu
 
 ---
 
-### 4.2. Execution Parameters & Targets
+### 4.2. Experemental Parameters 
 
 | Modality  | Analyzed Features                 | Reference Sample Size ($n$) | Primary Visual Export                 |
 | :--- |:----------------------------------| :--- |:--------------------------------------|
@@ -173,7 +173,7 @@ To understand which features are important for models to identify writers, featu
 | **STYLUS Kinematics** | 7 Stylus Kinematics Features      | 1000 | Top 20 Features Contribution Bar Plot |
 | **COMBINED (Hand/Stylus)** | 117 Stylus and Hand Kinematics Features | 1000 | Top 20 Features Contribution Bar Plot |
 
-> 💡 **HPC Cluster Deployment Note:** 
+> **HPC Cluster Deployment Note:** 
 > When executing the deep graph evaluation over specialized GPU nodes, an internal handler override for TensorFlow operation graphs is executed inside the script (`AddV2` mapped to `passthrough`). This prevents operational compilation blocks within the `DeepExplainer` module.
 
 ---
@@ -202,10 +202,10 @@ Execution logs and visualization scripts save the results  to the  following dir
 * `/CODE/STYLUS_NUM_TRAIN/`, `/CODE/AUTH_HAND_NUM_TRAIN/`, and `/CODE/HAND_STYLUS_NUM_TRAIN/`: contain serialized fold models (`*.h5`), split definitions (`_folds.pickle`), and model performance evaluations (`*.csv`)  for each number of paragraphs.
 * `centered_boxplot_with_legend.pdf`: An aggregated grouped boxplot figure showing accuracy metrics  with the trend lines  as a function of the model performance with the number of  paragraphs in the  training set.
 
-## 6. Ablation & Normalization Experiments
+## 6. Ablation and Normalization Experiments
 
 The scripts are stored in  the `ABLATION_EXPERIMENTS/` 
-### 6.1. Objectives & Rationale
+### 6.1. Objectives and Rationale
 These experiments evaluate  whether the models' identification accuracy is driven primarily by  handwriting dynamics behavioral characteristics or if it relies on static, participant-specific features that provide an easier shortcut to identity matching. Specifically, the models are evaluated against the targeted removal of stable physical body morphologies (e.g., hand width, arm length, arm width) and absolute spatial positioning coordinates. 
 
 The system compares baseline models directly in three experimental designs:
